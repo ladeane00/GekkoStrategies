@@ -4,4 +4,4 @@ swingperiod = 250
 [stoploss]
 enabled = false
 trailing = false
-percent = 5   
+percent = 5

@@ -1,8 +1,8 @@
 var config= require('../core/util.js').getConfig()
-      ,log= require('../core/log.js')
-        ,_= require('lodash')
-    ,talib= require("talib-promise")
- ,settings= config['gannswing']
+  ,log= require('../core/log.js')
+  ,_= require('lodash')
+  ,talib= require("talib-promise")
+  ,settings= config['gannswing']
 
 // Let's create our own method
 var method = {}
@@ -72,29 +72,29 @@ method.calculateVIX= function(candle, period) {
 
   var vix_stddev= function(period) {
     return talib.execute({
-        name: "STDDEV",
-        inReal: this.history.wvf,
-        startIdx: 0,
-        endIdx: (this.history.wvf.length - 1),
-        optInTimePeriod: period,
-        optInNbDev: 1
+      name: "STDDEV",
+      inReal: this.history.wvf,
+      startIdx: 0,
+      endIdx: (this.history.wvf.length - 1),
+      optInTimePeriod: period,
+      optInNbDev: 1
     }).then((data) => {
       this.vix.sdev= data.result
-      // log.debug(this.vix.sdev)
-    })
+    // log.debug(this.vix.sdev)
+  })
   }.bind(this)
 
   var vix_sma= function(period) {
     return talib.execute({
-        name: "SMA",
-        inReal: this.history.wvf,
-        startIdx: 0,
-        endIdx: (this.history.wvf.length - 1),
-        optInTimePeriod: period,
-        optInNbDev: 1
+      name: "SMA",
+      inReal: this.history.wvf,
+      startIdx: 0,
+      endIdx: (this.history.wvf.length - 1),
+      optInTimePeriod: period,
+      optInNbDev: 1
     }).then((data) => {
       this.vix.sma= data.result
-    })
+  })
   }.bind(this)
 
   // remove old data
@@ -124,54 +124,54 @@ method.calculateVIX= function(candle, period) {
 method.gannswing= function(candle, period) {
   var loma= function(period) {
     return talib.execute({
-        name: "SMA",
-        inReal: this.history.low,
-        startIdx: 0,
-        endIdx: this.history.low.length - 1,
-        optInTimePeriod: period,
-        optInNbDev: 1
+      name: "SMA",
+      inReal: this.history.low,
+      startIdx: 0,
+      endIdx: this.history.low.length - 1,
+      optInTimePeriod: period,
+      optInNbDev: 1
     }).then((data) => {
       this.swing.lowma= data.result
-    })
+  })
   }.bind(this)
 
   var hima= function(period) {
     return talib.execute({
-        name: "SMA",
-        inReal: this.history.high,
-        startIdx: 0,
-        endIdx: this.history.high.length - 1,
-        optInTimePeriod: period,
-        optInNbDev: 1
+      name: "SMA",
+      inReal: this.history.high,
+      startIdx: 0,
+      endIdx: this.history.high.length - 1,
+      optInTimePeriod: period,
+      optInNbDev: 1
     }).then((data) => {
       this.swing.highma= data.result
-    })
+  })
   }.bind(this)
 
   var fastloma= function(period) {
     return talib.execute({
-        name: "SMA",
-        inReal: this.history.low,
-        startIdx: 0,
-        endIdx: this.history.low.length - 1,
-        optInTimePeriod: period/5,
-        optInNbDev: 1
+      name: "SMA",
+      inReal: this.history.low,
+      startIdx: 0,
+      endIdx: this.history.low.length - 1,
+      optInTimePeriod: period/5,
+      optInNbDev: 1
     }).then((data) => {
       this.swing.fastlowma= data.result
-    })
+  })
   }.bind(this)
 
   var fasthima= function(period) {
     return talib.execute({
-        name: "SMA",
-        inReal: this.history.high,
-        startIdx: 0,
-        endIdx: this.history.high.length - 1,
-        optInTimePeriod: period/5,
-        optInNbDev: 1
+      name: "SMA",
+      inReal: this.history.high,
+      startIdx: 0,
+      endIdx: this.history.high.length - 1,
+      optInTimePeriod: period/5,
+      optInNbDev: 1
     }).then((data) => {
       this.swing.fasthighma= data.result
-    })
+  })
   }.bind(this)
 
   var calculateSMA= function(candle) {
@@ -221,7 +221,7 @@ method.gannswing= function(candle, period) {
       .then(fastloma(period)
         .then(fasthima(period)
           .then(calculateSMA(candle))
-  )))
+        )))
 }
 
 // What happens on every new candle?
@@ -233,25 +233,26 @@ method.update = function(candle) {
 // For debugging purposes.
 // For debugging purposes.
 method.log = function() {
-    log.debug('gannswing:    buycount: ' + this.swing.buycount
-                    + ' sellcount: ' + this.swing.sellcount);
-    log.debug('              tradebuy: ' + this.swing.tradebuy
-                    + ' tradesell: ' + this.swing.tradesell);
-    log.debug('              VIX t: ' + this.history.wvf[this.history.wvf.length-1]
-                    + ' VIX t-1: ' + this.history.wvf[this.history.wvf.length-2]);
+  log.debug('gannswing:    buycount: ' + this.swing.buycount
+    + ' sellcount: ' + this.swing.sellcount);
+  log.debug('              tradebuy: ' + this.swing.tradebuy
+    + ' tradesell: ' + this.swing.tradesell);
+  log.debug('              VIX t: ' + this.history.wvf[this.history.wvf.length-1]
+    + ' VIX t-1: ' + this.history.wvf[this.history.wvf.length-2]);
 }
 
 // Based on the newly calculated information, check if we should
 // update or not.
-method.check = function() {
-  var price = this.lastPrice
+method.check = function(candle) {
+  var price = this.candle.close;
+  //log.debug('price = ', price);
   if(this.swing.tradebuy) {
     if(this.trend.direction !== 'long') {
-      this.trend.adviced= false; this.trend.direction= 'long'
+      this.trend.adviced = false; this.trend.direction = 'long'
     }
     if(!this.trend.adviced) {
-      this.trend.adviced= true
-      this.history.buyPrice= price
+      this.trend.adviced = true
+      this.history.buyPrice = price
       this.advice('long')
     }
     else this.advice()
@@ -280,16 +281,19 @@ method.checkStopLoss = function(price) {
   if(!settings.stoploss.enabled)
     return false
   if(this.trend.adviced && this.trend.direction === 'long') {
-    sl= this.history.buyPrice * (1 - settings.stoploss.percent / 100)
+    //log.debug('history.buyPrice = ', this.history.buyPrice);
+    sl = this.history.buyPrice * (1 - settings.stoploss.percent / 100)
+    //log.debug('sl = ', sl);
     if(price < sl) {
+      log.debug('stoploss triggered!');
       this.trend.direction= 'stoploss'
       this.duration= 0; this.trend.persisted= false
       this.advice('short');
-      return true
+      return true;
     }
     if(settings.stoploss.trailing && price > this.history.buyPrice) {
-      this.history.buyPrice= price
-      return false
+      this.history.buyPrice = price
+      return false;
     }
   }
 }
